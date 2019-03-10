@@ -852,7 +852,9 @@ CQueryObject::WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	CQueryObject    *pcqueryobject	= (CQueryObject*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	MDIWindow	    *wnd;
     wyInt32         ret;
-    	
+	
+	wyInt32			state = 0;
+
     VERIFY(wnd = GetActiveWin());
 
     if(pcqueryobject)
@@ -881,6 +883,39 @@ CQueryObject::WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
                 SetFocus(pcqueryobject->m_hwndFilter);
                 return 0;
             }
+
+			state = GetKeyState(VK_CONTROL);
+			if (state & 0x8000)
+			{
+				wyChar *buff;
+
+				wyInt32 lentable = 0;
+				wyInt32 lendatabase = 0;
+
+				EditorBase	*peditorbase = NULL;
+
+				state = GetKeyState('C');
+
+				if (state & 0x8000) //COPY
+				{	
+					if (pcqueryobject->IsSelectionOnTable() == wyTrue)
+					{	
+						peditorbase = wnd->GetActiveTabEditor()->m_peditorbase;
+
+						lentable = strlen(pcqueryobject->m_seltable.GetString());
+						lendatabase = strlen(pcqueryobject->m_seldatabase.GetString());
+
+						buff = AllocateBuff(lentable + lendatabase + 1);
+
+						strcat(buff, pcqueryobject->m_seldatabase.GetString());
+						strcat(buff, ".");
+						strcat(buff, pcqueryobject->m_seltable.GetString());
+
+						SendMessage(peditorbase->m_hwnd, SCI_COPYTEXT, lentable+lendatabase+1, (LPARAM)buff);
+						free(buff);
+					}
+				}
+			}
             break;
         case WM_ENABLE:
             if(pcqueryobject)
