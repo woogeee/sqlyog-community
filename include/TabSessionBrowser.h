@@ -94,6 +94,7 @@ public:
 	wyBool              m_istabsticky;
 
 	wyBool              m_isrefreshed;
+
 };
 
 #endif

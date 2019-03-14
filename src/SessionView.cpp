@@ -43,6 +43,20 @@ SessionView::~SessionView()
 {
 }
 
+//create the grid
+void SessionView::CreateGrid()
+{
+	m_hwndgrid = CreateCustomGridEx(m_hwndframe,
+		0, 0, 0, 0,
+		m_gridwndproc,
+		GV_EX_ROWCHECKBOX | GV_EX_OWNERDATA | GV_EX_COL_TOOLTIP, (LPARAM)this);
+
+	CustomGrid_SetOwnerData(m_hwndgrid, wyTrue);
+	SetGridFont();
+	ShowWindow(m_hwndgrid, SW_HIDE);
+	
+}
+
 //set the data
 void
 SessionView::SetData(MySQLDataEx *data)
@@ -71,14 +85,14 @@ SessionView::GetBanner(wyString& bannertext)
 void
 SessionView::CreateToolBar()
 {
-    wyUInt32 style = WS_CHILD | CCS_NOPARENTALIGN | TBSTYLE_TOOLTIPS | WS_VISIBLE | CCS_NODIVIDER | TBSTYLE_FLAT;
+	wyUInt32 style = WS_CHILD | CCS_NOPARENTALIGN | TBSTYLE_TOOLTIPS | WS_VISIBLE | CCS_NODIVIDER | TBSTYLE_FLAT;
 
 	m_hwndtoolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, style, 
                                    0, 0, 0, 0, m_hwndframe,
                                    (HMENU)IDC_TOOLBAR, (HINSTANCE)GetModuleHandle(0), NULL);
 
     //add tool buttons
-	AddToolButtons();
+	//AddToolButtons();
 
     //size the toolbar
     SendMessage(m_hwndtoolbar, TB_AUTOSIZE, 0, 0);
@@ -205,9 +219,10 @@ SessionView::Resize()
         toolwidth = rcparent.right - tbrect.right;
     }
 
-    SetWindowPos(m_hwndpadding, NULL, 0, 0, toolwidth + tbrect.right, DATAVIEW_TOPPADDING, SWP_NOZORDER);
-    SetWindowPos(m_hwndtoolbar, NULL, 0, DATAVIEW_TOPPADDING, toolwidth, toolheight, SWP_NOZORDER);
-    SetWindowPos(m_hwndrefreshtool, NULL, toolwidth, DATAVIEW_TOPPADDING, tbrect.right, toolheight, SWP_NOZORDER);
+    //SetWindowPos(m_hwndpadding, NULL, 0, 0, toolwidth + tbrect.right, DATAVIEW_TOPPADDING, SWP_NOZORDER);
+    //SetWindowPos(m_hwndtoolbar, NULL, 0, DATAVIEW_TOPPADDING, toolwidth, toolheight, SWP_NOZORDER);
+    //SetWindowPos(m_hwndrefreshtool, NULL, toolwidth, DATAVIEW_TOPPADDING, tbrect.right, toolheight, SWP_NOZORDER);
+	SetWindowPos(m_hwndrefreshtool, NULL, 0, DATAVIEW_TOPPADDING, tbrect.right, toolheight, SWP_NOZORDER);
         
     rcparent.top += toolheight + DATAVIEW_TOPPADDING;
     ResizeControls(rcparent);
@@ -814,9 +829,8 @@ SessionView::GridWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		return TRUE;
 
 	}
-	DataView::GridWndProc(hwnd, message, wparam, lparam);
-	
-	return TRUE;
+		
+	return DataView::GridWndProc(hwnd, message, wparam, lparam);
 }
 
 void
@@ -833,7 +847,13 @@ SessionView::OnWMCommand(WPARAM wparam, LPARAM lparam)
 		OnKillSession(id);
 		RefreshDataView();
 		break;
-
+	case ID_RESULT_INSERT:
+	case ID_RESULT_DELETE:
+	case IDC_SETNULL:
+	case IDC_SETDEF:
+	case IDC_SETEMPTY:
+	case ID_RESULT_SAVE:
+		return;
 	}
 
 	DataView::OnWMCommand(wparam, lparam);

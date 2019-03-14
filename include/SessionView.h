@@ -174,6 +174,7 @@ class SessionView : public DataView, public IQueryBuilder
 		static LRESULT CALLBACK GridWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 		void	OnWMCommand(WPARAM wparam, LPARAM lparam);
 		void	OnKillSession(wyInt32 id);
+		void	CreateGrid();
 };
 
 #endif

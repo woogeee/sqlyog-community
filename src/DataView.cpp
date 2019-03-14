@@ -1538,6 +1538,7 @@ DataView::CreateGrid()
 									0, 0, 0, 0, 
 									m_gridwndproc, 
 									GV_EX_ROWCHECKBOX | GV_EX_OWNERDATA | GV_EX_COL_TOOLTIP, (LPARAM)this);
+									//NULL, (LPARAM)this);
     
 	CustomGrid_SetOwnerData(m_hwndgrid, wyTrue);
 	SetGridFont();
