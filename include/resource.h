@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by SQLyog.rc
+// Microsoft Visual C++에서 생성한 포함 파일입니다.
+// SQLyog.rc에서 사용되고 있습니다.
 //
 #define IDI_MAIN                        1
 #define IDC_DIAG_OPTIMIZE               3
@@ -339,6 +339,8 @@
 #define IDR_MENU1                       990
 #define IDR_MESSAGETAB_MENU             990
 #define IDR_MESSAGETABMENU              991
+#define IDR_QUERYLISTMENU1              991
+#define IDR_SESSIONMENU                 991
 #define IDI_REMOVE_FILTER               994
 #define IDI_REMOVE_DB_FILTER            995
 #define IDI_OVERLAYFILTER               997
@@ -1632,6 +1634,11 @@
 #define ID_Menu41826                    41826
 #define ID_Menu41827                    41827
 #define IDM_COLLAPSEOBJECT              41828
+#define ID_FILE_SESSIONBROWSER          41829
+#define ID_SESSION_BROWSER              41830
+#define ID_OPEN_KILLSESSION             41831
+#define IDM_OPEN_KILLSESSION            41832
+#define IDM_KILL_SESSION                41833
 #define IDC_INITCOMMAND                 44114
 #define IDC_EDITINITCOMMAND             44115
 #define IDC_INVISIBLE                   44116
@@ -1669,7 +1676,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        1018
-#define _APS_NEXT_COMMAND_VALUE         41829
+#define _APS_NEXT_COMMAND_VALUE         41834
 #define _APS_NEXT_CONTROL_VALUE         1716
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

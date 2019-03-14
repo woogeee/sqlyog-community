@@ -27,41 +27,12 @@ Author: Vishal P.R, Janani SriGuha
 
 #include "DataView.h"
 #include "CustGrid.h"
-
+#include "MySQLTableDataEx.h"
 //some forward declarations
 class DataView;
 class TableView;
 class MySQLDataEx;
 class FormView;
-
-//Data for TableView
-class MySQLTableDataEx : public MySQLDataEx
-{
-	public:
-        ///Constructor
-        /**
-        @param pmdi     : IN MDIWindow pointer
-        */
-                        MySQLTableDataEx(MDIWindow* pmdi);
-
-                        ~MySQLTableDataEx()
-                        {
-                        }
-
-        ///Function to handle the view persistence for the table
-        /**
-        @param isset    : IN wyTrue if it should be saved, wyFalse if you want to load
-        @returns ViewType enumeration
-        */
-        ViewType        HandleViewPersistence(wyBool isset);
-
-        ///Function handles the limit persistance for the table
-        /**
-        @param isset    : IN wyTrue if it should be saved, wyFalse if you want to load
-        @returns void
-        */
-        void            HandleLimitPersistence(wyBool isset);
-};
 
 //Class representing table view
 class TableView : public DataView, public IQueryBuilder

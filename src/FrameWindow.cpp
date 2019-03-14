@@ -2805,6 +2805,11 @@ FrameWindow::OnWmCommand(WPARAM wParam)
             CreateNewQueryEditor(pcquerywnd);
 		break;
 
+	case ID_SESSION_BROWSER:
+		if (hwndactive)
+			//CreateSessionBrowser(pcquerywnd);
+			CreateNewSessionBrowserTab(pcquerywnd, wyTrue);
+		break;
 	
 	case ID_EDIT_SWITCHTABSTORIGHT:
 	case ACCEL_NAVIGATETABDOWN:
@@ -7895,6 +7900,21 @@ FrameWindow::CreateNewQueryEditor(MDIWindow *pcquerywnd)
 	
 	SetFocus(peditorbase->m_hwnd);
 	pcquerywnd->SetQueryWindowTitle();
+	//CustomTab_SetBufferedDrawing(wyFalse);		
+	return;
+}
+
+void
+FrameWindow::CreateNewSessionBrowserTab(MDIWindow *pcquerywnd, wyBool isnewtab)
+{
+	TabModule	*ptabmodule = pcquerywnd->m_pctabmodule;
+
+	//CustomTab_SetBufferedDrawing(wyTrue);
+
+	//ptabmodule->CreateTabDataTab(pcquerywnd, isnewtab, wyTrue);
+	ptabmodule->CreateSessionBrowserTab(pcquerywnd, isnewtab, wyTrue);
+
+	//pcquerywnd->SetQueryWindowTitle();
 	//CustomTab_SetBufferedDrawing(wyFalse);		
 	return;
 }

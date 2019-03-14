@@ -24,6 +24,7 @@
 #include "MDIWindow.h"
 #include "TabTypes.h"
 #include "TabHistory.h"
+#include "TabSessionBrowser.h"
 #include "TabObject.h"
 #include "TabTableData.h"
 #include "FindAndReplace.h"
@@ -208,6 +209,8 @@ public:
 
 	wyBool				CreateTabDataTab(MDIWindow * wnd, wyBool isnewtab = wyFalse, wyBool setfocus = wyFalse);
 
+	wyBool				CreateSessionBrowserTab(MDIWindow * wnd, wyBool showtab = wyTrue, wyBool setfocus = wyTrue);
+
 	//insert tab into the drop down struct
 	VOID				InsertTabIntoDropDownStruct(MDIWindow * wnd, pretabtype tabtype);
 	///Function to instantiate the TabSchemaDesigner
@@ -389,6 +392,9 @@ public:
     /// TabHistory class pointer
 	TabHistory			*m_pctabhistory;
 
+	/// TabHistory class pointer
+	TabSessionBrowser			*m_pcsessionbrowser;
+
 	TabObject			*m_pcinfotab;
 
 	/// EditorQuery object pointer
@@ -423,5 +429,7 @@ public:
 	MYSQL_RES			*m_infovariablesres;
 
 	TableView			*m_tableview;
+
+	SessionView			*m_sessionview;
 };
 #endif
