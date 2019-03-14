@@ -68,6 +68,7 @@ TabModule::TabModule(HWND hwnd)
     m_pctabqb       = NULL;
     m_pctabeditor   = NULL;
 	m_pctabhistory	= NULL;
+	m_pcsessionbrowser = NULL;
 	m_pcinfotab		= NULL;
     m_isdefault     = wyFalse;
 	m_hwndcommtytitle = NULL;
@@ -78,6 +79,7 @@ TabModule::TabModule(HWND hwnd)
 	m_istabcreate = wyFalse;
 	
 	m_tableview = NULL;
+	m_sessionview = NULL;
 
 	//serailnumber = 1;
 
@@ -1466,6 +1468,139 @@ TabModule::CreateHistoryTab(MDIWindow * wnd, wyBool showtab, wyBool setfocus)
 	return wyTrue;
 }
 
+//Session Browser tab
+wyBool
+TabModule::CreateSessionBrowserTab(MDIWindow * wnd, wyBool isnewtab, wyBool setfocus)
+{
+	wyInt32             count;
+	wyInt32				i, seltab;
+	CTCITEM				tmp = { 0 };
+	wyString			buffer;
+	TabSessionBrowser*       temptab = NULL;
+	MySQLTableDataEx*   tempdata;
+	wyChar              buff[140];
+	wyBool              istabfound = wyFalse, istableselected = wyFalse;
+	TabEditor*          pte;
+
+	if (isnewtab == wyFalse && pGlobals->m_istabledataunderquery == wyTrue)
+	{
+		if (!(pte = GetActiveTabEditor()))
+		{
+			CreateQueryEditorTab(wnd);
+			pte = GetActiveTabEditor();
+		}
+
+		pte->m_pctabmgmt->SelectFixedTab(IDI_TABLE);
+		return wyTrue;
+	}
+
+	if (!m_sessionview)
+	{
+		m_sessionview = new SessionView(wnd, m_hwnd);
+		m_sessionview->Create();
+		m_sessionview->Resize();
+	}
+
+	seltab = CustomTab_GetCurSel(m_hwnd);
+	count = CustomTab_GetItemCount(m_hwnd);
+	tmp.m_mask = CTBIF_IMAGE | CTBIF_LPARAM | CTBIF_TOOLTIP;
+	tmp.m_tooltiptext = buff;
+	buffer.Sprintf("Session Browser");
+	
+	if (wnd->m_pcqueryobject->IsSelectionOnTable() == wyTrue)
+	{
+		istableselected = wyTrue;
+		//buffer.Sprintf("`%s`.`%s`", wnd->m_pcqueryobject->m_seldatabase.GetString(), wnd->m_pcqueryobject->m_seltable.GetString());
+		buffer.Sprintf("Session Browser");
+	}
+	else
+	{
+		buffer.Sprintf(_("Table Data"));
+	}
+
+	/*
+	for (i = 0; i < count; i++)
+	{
+		CustomTab_GetItem(m_hwnd, i, &tmp);
+
+		if (tmp.m_iimage == IDI_TABLE && ((temptab = (TabSessionBrowser*)tmp.m_lparam))->m_istabsticky == isnewtab && isnewtab == wyFalse)
+		{
+			if (istableselected == wyTrue &&
+				(!temptab->m_tabledata ||
+					temptab->m_tabledata->m_db.Compare(wnd->m_pcqueryobject->m_seldatabase) ||
+					temptab->m_tabledata->m_table.Compare(wnd->m_pcqueryobject->m_seltable)))
+			{
+				tempdata = temptab->m_tabledata;
+				temptab->m_tabledata = new MySQLTableDataEx(wnd);
+				temptab->m_tableview->SetData(temptab->m_tabledata);
+				delete tempdata;
+				//buffer.Sprintf("`%s`.`%s`", temptab->m_tabledata->m_db.GetString(), temptab->m_tabledata->m_table.GetString());
+				buffer.Sprintf("Session Browser");
+				tmp.m_mask = CTBIF_TOOLTIP | CTBIF_TEXT | CTBIF_IMAGE | CTBIF_LPARAM;
+				tmp.m_tooltiptext = (wyChar*)buffer.GetString();
+				tmp.m_psztext = _("Table Data");
+				tmp.m_cchtextmax = strlen(_("Table Data"));
+				CustomTab_SetItem(m_hwnd, i, &tmp);
+				temptab->m_isrefreshed = wyFalse;
+			}
+			else
+			{
+				temptab->m_isrefreshed = wyTrue;
+			}
+
+			if (setfocus == wyTrue)
+			{
+				CustomTab_EnsureVisible(m_hwnd, i);
+
+				if (seltab != i)
+				{
+					CustomTab_SetCurSel(m_hwnd, i);
+				}
+				else if (temptab->m_isrefreshed == wyFalse)
+				{
+					temptab->ShowTabContent(i, wyTrue);
+				}
+			}
+
+			istabfound = wyTrue;
+			break;
+		}
+		else
+		{
+			if (tmp.m_iimage == IDI_TABLE && ((temptab = (TabSessionBrowser*)tmp.m_lparam))->m_istabsticky == isnewtab
+				&& isnewtab == wyTrue && !buffer.Compare(tmp.m_tooltiptext))
+			{
+				CustomTab_SetCurSel(m_hwnd, i);
+				CustomTab_EnsureVisible(m_hwnd, i);
+				istabfound = wyTrue;
+				return wyTrue;
+			}
+		}
+	}
+	*/
+	//if (istabfound == wyFalse)
+	{
+		temptab = new TabSessionBrowser(wnd, m_hwnd, isnewtab);
+
+		if (setfocus == wyFalse)
+		{
+			delete temptab->m_tabledata;
+			temptab->m_tabledata = NULL;
+		}
+
+		temptab->CreateTab(setfocus);
+
+		if (isnewtab == wyFalse)
+		{
+			GetTabOpenPersistence(IDI_TABLE, wyTrue, wyTrue);
+		}
+
+		//add the table data tab to drop down
+		//AddTabletabIntoDropDown(wnd, temptab, setfocus);
+	}
+	
+	return wyTrue;
+}
 
 //Info tab
 wyBool

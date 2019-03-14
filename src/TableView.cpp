@@ -28,7 +28,7 @@ Author: Vishal P.R, Janani SriGuha
 #include "FKDropDown.h"
 
 class FKDropDown;
-
+/*
 //constructor
 MySQLTableDataEx::MySQLTableDataEx(MDIWindow* pmdi) : MySQLDataEx(pmdi)
 {
@@ -118,6 +118,7 @@ MySQLTableDataEx::HandleViewPersistence(wyBool isset)
 
     return view;
 }
+*/
 
 //view constructor
 TableView::TableView(MDIWindow *wnd, HWND hwndparent):DataView(wnd, hwndparent, (IQueryBuilder *)this)

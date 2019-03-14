@@ -1359,6 +1359,9 @@ public:
     */
     void                    CreateNewQueryEditor(MDIWindow *pcquerywnd);
 
+
+	void                    CreateNewSessionBrowserTab(MDIWindow *pcquerywnd, wyBool isnewtab = wyFalse);
+
 	///delete active query tab item
 	 /**
     @param pcquerywnd       : IN/OUT  Query window HANDLE

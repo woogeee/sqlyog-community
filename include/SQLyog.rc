@@ -14,7 +14,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// 영어(미국) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -495,6 +495,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "E&xit\tAlt+F4",               IDM_FILE_EXIT
+        MENUITEM "Session Browser",             ID_SESSION_BROWSER
     END
     POPUP "&Edit"
     BEGIN
@@ -885,6 +886,14 @@ BEGIN
     POPUP "Menu"
     BEGIN
         MENUITEM "Show Only Errors",            ID_MENU_SHOWONLYERRORS
+    END
+END
+
+IDR_SESSIONMENU MENU
+BEGIN
+    POPUP "Open"
+    BEGIN
+        MENUITEM "Kill Session",                IDM_KILL_SESSION
     END
 END
 
@@ -3847,12 +3856,12 @@ BEGIN
     IDS_COMMUNITY_AD_75     "Form View - conveniently browse through your data, one row at a time"
 END
 
-#endif    // English (United States) resources
+#endif    // 영어(미국) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (India) resources
+// 영어(인도) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENN)
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_INDIA
@@ -3894,7 +3903,7 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (India) resources
+#endif    // 영어(인도) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
