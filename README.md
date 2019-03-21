@@ -14,3 +14,14 @@ You can download a 14-day trial from-[Webyog download page](https://www.webyog.c
 Prices start from $69/user, with free updates (for major & minor versions) for one year.
 
 [Price list for various editions of SQLyog](https://www.webyog.com/shop/)
+
+
+## Aditional Function 
+SessionBrowser 
+- menu : File > SessionBrowser
+- function : listing current session and kill session(click Right Click)
+
+Copy <schema_name>. <table_name>
+- function : You Can copy <schema_name>. <table_name> to clipboard by Ctrl + C on ObjectBrowser
+
+Query Executing by Ctrl + Enter
