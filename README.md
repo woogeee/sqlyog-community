@@ -17,11 +17,12 @@ Prices start from $69/user, with free updates (for major & minor versions) for o
 
 
 ## Aditional Function by woogeee
-SessionBrowser 
+
+### SessionBrowser 
 - menu : File > SessionBrowser
 - function : listing current session and kill session(click Right Button)
 
-Copy <schema_name>. <table_name>
+### Copy <schema_name>. <table_name>
 - function : You Can copy <schema_name>. <table_name> to clipboard by Ctrl + C on ObjectBrowser
 
-Query Executing by Ctrl + Enter
+### Query Executing by Ctrl + Enter
