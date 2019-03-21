@@ -16,7 +16,7 @@ Prices start from $69/user, with free updates (for major & minor versions) for o
 [Price list for various editions of SQLyog](https://www.webyog.com/shop/)
 
 
-## Aditional Function 
+## Aditional Function by woogeee
 SessionBrowser 
 - menu : File > SessionBrowser
 - function : listing current session and kill session(click Right Button)
