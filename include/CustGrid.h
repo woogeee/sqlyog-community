@@ -290,9 +290,9 @@ public:
 	CCustGrid(HWND h);
 	~CCustGrid();
 
-
-
 	
+
+
 	HWND            m_hwndtooltip;
 	POINT			m_mouseprevpt;
 

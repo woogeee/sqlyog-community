@@ -821,15 +821,17 @@ SessionView::GridWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	SessionView* pviewdata = (SessionView*)CustomGrid_GetLongData(hwnd);
 
-	
+
 	switch (message)
 	{
 	case GVN_RBUTTONDOWN:
 		pviewdata->OnContextMenu(lparam);
 		return TRUE;
+	case GVN_BEGINLABELEDIT:
+		return FALSE;
 
 	}
-		
+
 	return DataView::GridWndProc(hwnd, message, wparam, lparam);
 }
 

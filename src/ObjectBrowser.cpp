@@ -900,19 +900,22 @@ CQueryObject::WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 				{	
 					if (pcqueryobject->IsSelectionOnTable() == wyTrue)
 					{	
-						peditorbase = wnd->GetActiveTabEditor()->m_peditorbase;
+						if (wnd->GetActiveTabEditor())
+						{
+							peditorbase = wnd->GetActiveTabEditor()->m_peditorbase;
 
-						lentable = strlen(pcqueryobject->m_seltable.GetString());
-						lendatabase = strlen(pcqueryobject->m_seldatabase.GetString());
+							lentable = strlen(pcqueryobject->m_seltable.GetString());
+							lendatabase = strlen(pcqueryobject->m_seldatabase.GetString());
 
-						buff = AllocateBuff(lentable + lendatabase + 1);
+							buff = AllocateBuff(lentable + lendatabase + 1);
 
-						strcat(buff, pcqueryobject->m_seldatabase.GetString());
-						strcat(buff, ".");
-						strcat(buff, pcqueryobject->m_seltable.GetString());
+							strcat(buff, pcqueryobject->m_seldatabase.GetString());
+							strcat(buff, ".");
+							strcat(buff, pcqueryobject->m_seltable.GetString());
 
-						SendMessage(peditorbase->m_hwnd, SCI_COPYTEXT, lentable+lendatabase+1, (LPARAM)buff);
-						free(buff);
+							SendMessage(peditorbase->m_hwnd, SCI_COPYTEXT, lentable + lendatabase + 1, (LPARAM)buff);
+							free(buff);
+						}
 					}
 				}
 			}

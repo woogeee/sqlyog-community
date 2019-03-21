@@ -175,6 +175,6 @@ class SessionView : public DataView, public IQueryBuilder
 		void	OnWMCommand(WPARAM wparam, LPARAM lparam);
 		void	OnKillSession(wyInt32 id);
 		void	CreateGrid();
-};
+			   };
 
 #endif
