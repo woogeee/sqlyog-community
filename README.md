@@ -19,7 +19,7 @@ Prices start from $69/user, with free updates (for major & minor versions) for o
 ## Aditional Function 
 SessionBrowser 
 - menu : File > SessionBrowser
-- function : listing current session and kill session(click Right Click)
+- function : listing current session and kill session(click Right Button)
 
 Copy <schema_name>. <table_name>
 - function : You Can copy <schema_name>. <table_name> to clipboard by Ctrl + C on ObjectBrowser
