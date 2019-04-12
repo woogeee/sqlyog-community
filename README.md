@@ -13,3 +13,5 @@ SQLyog is an all-round Management Tool (/'GUI'/'Frontend') for MySQL.
 - function : You Can copy <schema_name>. <table_name> to clipboard by Ctrl + C on ObjectBrowser
 
 ### Query Executing by Ctrl + Enter
+
+### Multi Select Grid without checkbox
