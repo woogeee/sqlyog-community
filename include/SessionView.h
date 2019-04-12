@@ -76,6 +76,13 @@ class SessionView : public DataView, public IQueryBuilder
 		void				GetQuery(wyString& query);
 	
 		ThreadExecStatus	GetTableDetails();
+
+		///Function creates the view
+		/**
+		@returns void
+		*/
+		void                    Create();
+
 	protected:
         ///Function to create toolbars and additional controls
         /**

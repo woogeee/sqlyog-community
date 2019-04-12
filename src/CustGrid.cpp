@@ -900,6 +900,7 @@ CCustGrid::CCustGrid(HWND hwnd)
 	m_isscrolling   = wyFalse;
     m_isvisible     = wyTrue;
     m_hight         = 18;
+	m_selrowlist	= NULL;
 
     memset(&m_scrollbarinfo, 0, sizeof(GVSCROLLBARINFO));
 
@@ -951,6 +952,9 @@ CCustGrid::~CCustGrid()
 
 	if(m_hwndtooltip)
 		DestroyWindow(m_hwndtooltip);
+
+	if(m_selrowlist)
+		InitSelectedRow();
 
 	m_tooltipidindex = 0; // restting the tooltip unique id to zero so they are reassigned from zero again
 }
@@ -2272,7 +2276,7 @@ CCustGrid::OnPaint(WPARAM wparam, LPARAM lparam)
     
     ///now we traverse through the rows and add rows and columns.
     rowscrolllimit = DrawRows(&rect, &rectwin ,hdcmem, &totcx, &totcy, hfontold);
-	
+
 	//To get correct hight of grid if Flip grid
 	if(m_flip == wyTrue)
 	{
@@ -2296,9 +2300,9 @@ CCustGrid::OnPaint(WPARAM wparam, LPARAM lparam)
     ShowHideScrollBar(totcx, totcy, rectwin);
 	SetScrollBarLimits(rowscrolllimit > 0 ? rowscrolllimit : 5, colscrolllimit, &rectwin, totcx, totcy);
     
-			
+	
 	EndPaint(m_hwnd, &ps);	// no ret
-
+	
 	// now if the current selected row and current selected col is of list type.
 	// then we drop down the list and start editing.
 	if(m_isediting == wyTrue)
@@ -3223,7 +3227,10 @@ CCustGrid::DrawRowColumns(HDC hdcmem, PRECT rect, PRECT rectwin, wyUInt32 *totcx
 			// Draw the cell text
 			if(pgvcolnode && pgvcolnode->isshow == wyTrue)
 			{
-				DrawCell(hdcmem, rowcount, colcount, pgvcolnode, pgvcol, hbrbkgnd, &rect2, &greyrect, &recttemp);
+				if(m_exstyle & GV_EX_MULTIROW_SELECT)
+					DrawCellMultiSelection(hdcmem, rowcount, colcount, pgvcolnode, pgvcol, hbrbkgnd, &rect2, &greyrect, &recttemp);
+				else
+					DrawCell(hdcmem, rowcount, colcount, pgvcolnode, pgvcol, hbrbkgnd, &rect2, &greyrect, &recttemp);
 			}
 
 			if(m_flip == wyTrue)
@@ -3271,7 +3278,7 @@ CCustGrid::DrawRowColumns(HDC hdcmem, PRECT rect, PRECT rectwin, wyUInt32 *totcx
         gvwattermark.hdc = hdcmem;
         gvwattermark.rect = *rectwin;
         gvwattermark.rect.top = *totcy;
-        m_lpgvwndproc(m_hwnd, GVN_DRAWWATERMARK, 0, (LPARAM)&gvwattermark);
+        //m_lpgvwndproc(m_hwnd, GVN_DRAWWATERMARK, 0, (LPARAM)&gvwattermark);
     }
 	
     if(m_form == wyTrue)
@@ -3629,6 +3636,7 @@ CCustGrid::DrawCell(HDC hdcmem, wyInt32 row, wyInt32 col, PGVCOLNODE topcolstruc
 		    hpenold = (HPEN)SelectObject(hdcmem, hpenthick); // no ret
 
 		    VERIFY(Rectangle(hdcmem, rect->left-1, rect->top-1, rect->right+1, rect->bottom+1));
+			//VERIFY(Rectangle(hdcmem, rect->left - 1, rect->top - 1, rect->right + 1, 53 + 1));
 
             SelectObject(hdcmem, hbrold); // no ret
 		    SelectObject(hdcmem, hpenold); // no ret
@@ -3688,6 +3696,188 @@ CCustGrid::DrawCell(HDC hdcmem, wyInt32 row, wyInt32 col, PGVCOLNODE topcolstruc
 
 	return wyTrue;
 }	
+
+wyBool
+CCustGrid::DrawCellMultiSelection(HDC hdcmem, wyInt32 row, wyInt32 col, PGVCOLNODE topcolstruct, PGVCOLUMN pgvcol,
+	HBRUSH hbrbkgnd, RECT * greyrect, RECT * rect, RECT * rowrect)
+{
+	wyUInt32    format = DT_VCENTER | DT_SINGLELINE | DT_EXPANDTABS | DT_NOPREFIX;
+	GVDISPINFO	disp = { 0 };
+	HPEN		hpenthick = NULL, hpenold = NULL;
+	HBRUSH		hbrgrey = NULL, hbrold = NULL;
+	wyInt32		isnotgrey = 0, count = 0;
+	GVCELLCOLORINFO colorinfo = { 0 };
+	RECT        rectwin;
+
+	wyChar		usrdata[512] = { 0 };
+	wyChar		buttondata[512] = { 0 };
+
+	RECT		r;
+	COLORREF    color;
+
+	if (topcolstruct->pColumn.fmt & GVIF_RIGHT)
+		format |= DT_RIGHT;
+	else
+		format |= DT_LEFT;
+
+	if (topcolstruct->pColumn.mask & GVIF_BUTTON || topcolstruct->pColumn.mask & GVIF_TEXTBUTTON)
+		format |= DT_CENTER;
+
+	/// Colors and highlights cell
+	disp.pszButtonText = buttondata;
+	disp.text = usrdata;
+	disp.nRow = row;
+	disp.nCol = col;
+	disp.cchTextMax = 512;
+	colorinfo.nRow = row;
+	colorinfo.nCol = col;
+
+	if ((topcolstruct->pColumn.mask & GVIF_CELLCOLOR) &&
+		m_lpgvwndproc(m_hwnd, GVN_GETCELLCOLOR, 0, (LPARAM)&colorinfo))
+	{
+		while (1)
+		{
+			hbrgrey = CreateSolidBrush(colorinfo.color);
+			count++;
+			r.left = rect->left - (m_exstyle & GV_EX_NO_VER_BORDER ? 1 : 0);
+			r.top = rect->top - (m_exstyle & GV_EX_NO_HOR_BORDER ? 1 : 0);
+			r.right = rect->right + (m_exstyle & GV_EX_NO_VER_BORDER ? 1 : 0);
+			r.bottom = rect->bottom + (m_exstyle & GV_EX_NO_HOR_BORDER ? 1 : 0);
+			FillRect(hdcmem, &r, hbrgrey);
+
+			if (m_exstyle & GV_EX_FULLROWSELECT)
+			{
+				if (row == m_curselrow && isSelectRow(row))
+				{
+					hpenthick = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+					hpenthick = (HPEN)SelectObject(hdcmem, hpenthick);
+					MoveToEx(hdcmem, rect->left - 2, rect->top - 1, NULL);
+					LineTo(hdcmem, rect->right, rect->top - 1);
+					MoveToEx(hdcmem, rect->left - 2, rect->bottom, NULL);
+					LineTo(hdcmem, rect->right, rect->bottom);
+					hpenthick = (HPEN)SelectObject(hdcmem, hpenthick);
+					DeleteObject(hpenthick);
+				}
+
+			}
+			else
+			{
+				if (row == m_curselrow && col == m_curselcol && isSelectRow(row))
+				{
+					hpenthick = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+					hpenthick = (HPEN)SelectObject(hdcmem, hpenthick);
+					MoveToEx(hdcmem, rect->left - 1, rect->top - 1, NULL);
+					LineTo(hdcmem, rect->right, rect->top - 1);
+					MoveToEx(hdcmem, rect->right, rect->top - 1, NULL);
+					LineTo(hdcmem, rect->right, rect->bottom);
+					MoveToEx(hdcmem, rect->right, rect->bottom, NULL);
+					LineTo(hdcmem, rect->left - 2, rect->bottom - 1);
+					MoveToEx(hdcmem, rect->left - 1, rect->bottom - 1, NULL);
+					LineTo(hdcmem, rect->left - 1, rect->top - 2);
+					hpenthick = (HPEN)SelectObject(hdcmem, hpenthick);
+					DeleteObject(hpenthick);
+				}
+			}
+
+			DeleteObject(hbrgrey);
+
+			if (count == 1 && col == m_col - 1 && (m_exstyle & GV_EX_STRETCH_LAST_COL))
+			{
+				GetClientRect(m_hwnd, &rectwin);
+
+				if (rect->right < rectwin.right)
+				{
+					colorinfo.nCol++;
+					m_lpgvwndproc(m_hwnd, GVN_GETCELLCOLOR, 0, (LPARAM)&colorinfo);
+					rect->left = rect->right;
+					rect->right = rectwin.right;
+				}
+				else
+				{
+					break;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	else
+	{
+		isnotgrey = m_lpgvwndproc(m_hwnd, GVN_ISWHITEBKGND, row, col);
+
+		// now if the row is the current selected row then we draw a thin border thru the row
+
+		if ((row == m_curselrow && col == m_curselcol) && topcolstruct && topcolstruct->isshow == wyTrue && isSelectRow(row))
+		{
+			VERIFY(hbrgrey = CreateSolidBrush(GV_SELCOLOR));
+			VERIFY(hpenthick = CreatePen(PS_SOLID, 2, RGB(59, 125, 187)));
+			hbrold = (HBRUSH)SelectObject(hdcmem, hbrgrey); // no ret
+			hpenold = (HPEN)SelectObject(hdcmem, hpenthick); // no ret
+
+			VERIFY(Rectangle(hdcmem, rect->left - 1, rect->top - 1, rect->right + 1, rect->bottom + 1));
+			//VERIFY(Rectangle(hdcmem, rect->left - 1, rect->top - 1, rect->right + 1, 53 + 1));
+
+			SelectObject(hdcmem, hbrold); // no ret
+			SelectObject(hdcmem, hpenold); // no ret
+
+			VERIFY(DeleteObject(hbrgrey));
+			VERIFY(DeleteObject(hpenthick));
+		}
+
+		//if (isSelectRow(row) && col != m_curselcol)
+		if (isSelectRow(row))
+		{
+			color = ROWHIGHLIGHTCOLOR;
+			r.left = rect->left - 1;
+			r.top = rect->top - 1;
+			r.right = rect->right;
+			r.bottom = rect->bottom;
+
+			VERIFY(hbrgrey = CreateSolidBrush(color));
+			VERIFY(FillRect(hdcmem, &r, hbrgrey));
+			VERIFY(DeleteObject((HGDIOBJ)hbrgrey));
+		}
+		else if ((row != m_curselrow) && (!isSelectRow(row)))
+		{
+			r.left = rect->left - 1;
+			r.top = rect->top - 1;
+			r.right = rect->right;
+			r.bottom = rect->bottom;
+			color = ALTHIGHLIGHTCOLOR;
+
+			if (row % 2)
+			{
+				VERIFY(hbrgrey = CreateSolidBrush(color));
+				VERIFY(FillRect(hdcmem, &r, hbrgrey));
+				VERIFY(DeleteObject((HGDIOBJ)hbrgrey));
+			}
+			else if (!isnotgrey)
+			{
+				VERIFY(FillRect(hdcmem, &r, hbrbkgnd));
+			}
+		}
+	}
+
+	if (topcolstruct->pColumn.mask & GVIF_BOOL)
+		DrawCellBool(hdcmem, rowrect, &disp, row, col);
+
+	else if (topcolstruct->pColumn.mask & GVIF_BUTTON)
+		DrawCellButton(hdcmem, pgvcol, rowrect, &disp, row, col);
+
+	else if (topcolstruct->pColumn.mask & GVIF_TEXTBUTTON)
+		DrawCellTextButton(hdcmem, pgvcol, rowrect, &disp, row, col);
+
+	else if (topcolstruct->pColumn.mask & GVIF_DROPDOWNLIST || topcolstruct->pColumn.mask & GVIF_DROPDOWNNLIST ||
+		topcolstruct->pColumn.mask & GVIF_DROPDOWNMULTIPLE || topcolstruct->pColumn.mask & GVIF_LIST)
+		DrawCellDropOrList(hdcmem, pgvcol, rowrect, &disp, row, col);
+
+	else
+		DrawCellOther(hdcmem, pgvcol, rowrect, &disp, topcolstruct);
+
+	return wyTrue;
+}
 
 /* Function takes the cell boundary in RECT parameter and draws like:
 
@@ -4384,7 +4574,9 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
 	PGVROWNODE	pgvrownode = m_rowlist;
     wyBool      checkbox = wyFalse;	
     wyBool      ret = wyTrue;
-    	
+	SHORT		contkey = 0;
+	wyInt32		prevselrow = m_curselrow;
+
 	pnt.x = GET_X_LPARAM(lparam);
 	pnt.y = GET_Y_LPARAM(lparam);
 
@@ -4480,6 +4672,28 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
     if((m_flip == wyTrue && pnt.y <= y) || (m_flip == wyFalse && pnt.x < x))
         checkbox = wyTrue;
 
+	
+	if(m_exstyle & GV_EX_MULTIROW_SELECT)
+	{
+		wyInt32 state = 0;
+		
+		state = GetKeyState(VK_CONTROL);
+
+		if(state & 0x8000)
+		{
+			contkey = VK_CONTROL;
+		}
+		else
+		{
+			state = GetKeyState(VK_SHIFT);
+
+			if (state & 0x8000)
+			{
+				contkey = VK_SHIFT;
+			}
+		}
+	}
+
 	if((m_exstyle & GV_EX_ROWCHECKBOX) && checkbox == wyTrue)
     {
 		// that means we need to check it.
@@ -4498,32 +4712,32 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
         else
         {
 
-		// in owner data mode it is very simple 
-		for(count = m_initrow; count <= m_row; count++)
-        {
-            /// When filp is active we check for the x axis when traversing through the check boxes
-			if(m_flip == wyFalse && (pnt.y > y) && (pnt.y < (y + m_hight)) ||
-                m_flip == wyTrue && (pnt.x > x) && (pnt.x < (x + pgvrownode->rowcx)))
-            {
-				//if the last selected row is updated then we need to save the row 
-				if((count != m_curselrow) && 
-                    (!m_lpgvwndproc(m_hwnd, GVN_ROWCHANGINGTO, count, m_curselcol) ||
-                    !m_lpgvwndproc(m_hwnd, GVN_BEGINCHANGEROW, m_curselrow, m_curselcol)))
-					return 0;
+			// in owner data mode it is very simple 
+			for(count = m_initrow; count <= m_row; count++)
+			{
+				/// When filp is active we check for the x axis when traversing through the check boxes
+				if(m_flip == wyFalse && (pnt.y > y) && (pnt.y < (y + m_hight)) ||
+					m_flip == wyTrue && (pnt.x > x) && (pnt.x < (x + pgvrownode->rowcx)))
+				{
+					//if the last selected row is updated then we need to save the row 
+					if((count != m_curselrow) && 
+						(!m_lpgvwndproc(m_hwnd, GVN_ROWCHANGINGTO, count, m_curselcol) ||
+						!m_lpgvwndproc(m_hwnd, GVN_BEGINCHANGEROW, m_curselrow, m_curselcol)))
+						return 0;
 
-				// This is the row.
-                return HandleRow(pgvrownode, count);
+					// This is the row.
+					return HandleRow(pgvrownode, count);
+				}
+
+				if(m_flip == wyTrue)
+					x += pgvrownode->rowcx;
+				else
+					y += m_hight;
+
+				if(m_flip == wyTrue && pgvrownode)
+					pgvrownode = pgvrownode->pNext;
 			}
-
-			if(m_flip == wyTrue)
-                x += pgvrownode->rowcx;
-            else
-			    y += m_hight;
-
-            if(m_flip == wyTrue && pgvrownode)
-                pgvrownode = pgvrownode->pNext;
 		}
-	}
     }
 
 	//Check wheter L_BUTTON event happened on outside the data disply area, then return ot
@@ -4539,7 +4753,7 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
 			}
 		}
 	}
-
+	
 	for(count = m_initrow; count <= m_row; count++)
     {
 		for(colcount = m_initcol; colcount < m_col; colcount++)
@@ -4550,7 +4764,7 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
 			{
 				// It is already selected so we begin editing it.
 				// Or if it is bool type then we check or uncheck it
-				if(m_curselrow == count && m_curselcol == colcount && m_first == wyFalse)	
+				if(m_curselrow == count && m_curselcol == colcount && m_first == wyFalse && !(m_exstyle & GV_EX_MULTIROW_SELECT))
                     return HandleCell(count, colcount);
                 else	
                 {
@@ -4562,7 +4776,44 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
 
                     HandleNonTextCell(count, colcount, &pnt, &recttemp);
 					/// Otherwise put it into column selection mode.
-                    HandleCellSelection(count, colcount, &recttemp, &rectwin);
+                    
+					//m_lpgvwndproc(m_hwnd, GVN_DRAWWATERMARK, m_curselrow, m_curselcol);
+					//m_lpgvwndproc(m_hwnd, GVN_DRAWWATERMARK, m_curselrow -1, m_curselcol);
+					if ((m_exstyle & GV_EX_MULTIROW_SELECT) && (contkey == 0))
+					{
+						InitSelectedRow();;
+						AddSelectedRow(count);
+					}
+					else if ((m_exstyle & GV_EX_MULTIROW_SELECT) && (contkey == VK_SHIFT) && (m_curselrow != count))
+					{
+						LONG currcount = (LONG)count;
+						InitSelectedRow();
+						if (m_curselrow < currcount)
+						{
+							for (LONG i = m_curselrow; i <= currcount; i++)
+								AddSelectedRow(i);
+						}
+						else
+						{
+							for (LONG i = currcount; i <= m_curselrow; i++)
+								AddSelectedRow(i);
+						}
+					}
+					//else if ((m_exstyle & GV_EX_MULTIROW_SELECT) && (contkey == VK_CONTROL) && (m_curselrow != count))
+					else if ((m_exstyle & GV_EX_MULTIROW_SELECT) && (contkey == VK_CONTROL))
+					{
+
+						if(isSelectRow(count))
+						{
+							RemoveSelectedRow(count);
+						}
+						else
+						{
+							AddSelectedRow(count);
+						}
+					}
+
+					HandleCellSelection(count, colcount, &recttemp, &rectwin);
                     return 1;
 				}
 			}
@@ -4579,9 +4830,10 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
 
                 if(count != m_curselrow)
                 {
+
                     m_curselrow = count;
-                    m_lpgvwndproc(m_hwnd, GVN_ENDCHANGEROW, m_curselrow, m_curselcol);
-                    InvalidateRect(m_hwnd, NULL, FALSE);
+					m_lpgvwndproc(m_hwnd, GVN_ENDCHANGEROW, m_curselrow, m_curselcol);
+					InvalidateRect(m_hwnd, NULL, FALSE);
                     UpdateWindow(m_hwnd);
                 }
 
@@ -4590,6 +4842,8 @@ CCustGrid::OnLButtonDown(WPARAM wparam, LPARAM lparam)
         }
 	}
 
+
+	
 	//	if it has reached here then no valid column items were selected so we
 	//	set the focus to the grid 
 	SetFocus(m_hwnd);
@@ -4734,6 +4988,7 @@ CCustGrid::HandleCellSelection(wyInt32 row, wyInt32 col, RECT *recttemp, RECT *r
 	*/
 
 	// Also change the row.
+
 	if(m_flip == wyFalse && recttemp->bottom > rectwin->bottom - GetSystemMetrics(SM_CYHSCROLL))
 		++m_initrow;
 	
@@ -9411,3 +9666,124 @@ CCustGrid::SetSelAllState(wyInt32 state)
     }
 }
 
+//	Add selected row for multi selection
+void
+CCustGrid::AddSelectedRow(LONG row)
+{
+	PGVROW prow = new GVROW;
+
+	if (!m_selrowlist)
+	{
+		prow->row = row;
+		prow->pNext = NULL;
+	}
+	else
+	{
+		prow->row = row;
+		prow->pNext = m_selrowlist;
+	}
+
+	m_selrowlist = prow;
+	return;
+}
+//	Remove selected row for multi selection
+void
+CCustGrid::RemoveSelectedRow(LONG row)
+{
+	PGVROW ptemp = NULL;
+	PGVROW prow = m_selrowlist;
+	PGVROW pprev = NULL;
+	if (prow->row == row)
+	{
+		ptemp = m_selrowlist;
+		m_selrowlist = ptemp->pNext;
+
+		free(ptemp);
+		return;
+	}
+
+	pprev = prow;
+	prow = prow->pNext;
+	while (prow)
+	{
+		if (prow->row == row)
+		{
+			ptemp = prow;
+			pprev->pNext = ptemp->pNext;
+			free(ptemp);
+			return;
+		}
+		pprev = prow;
+		prow = prow->pNext;
+	}
+	return;
+}
+
+//	Init selected row list for multi selection
+void		
+CCustGrid::InitSelectedRow()
+{
+	PGVROW ptemp;
+	while(ptemp = m_selrowlist)
+	{
+		m_selrowlist = ptemp->pNext;
+		free(ptemp);
+	}
+	return;
+}
+
+// whether select row or not
+wyBool		
+CCustGrid::isSelectRow(wyInt32 row)
+{
+	PGVROW ptemp = m_selrowlist;
+	while (ptemp)
+	{
+		if (ptemp->row == row)
+			return wyTrue;
+		ptemp = ptemp->pNext;
+	}
+	return wyFalse;
+}
+
+PGVROW 
+CCustGrid::GetSelRowList()
+{
+	return m_selrowlist;
+}
+
+void
+CCustGrid::GetCellText(wyInt32 row, wyInt32 col, wyChar* str)
+{
+	GVDISPINFO	disp = { 0 };
+	wyChar		*usrdata;
+	PGVCOLUMN	pgvcol;
+	wyString	pgvcoltext;
+	wyWChar		*buffercb;
+	wyUInt32	length = 1;
+
+
+	if (GetOwnerData())
+	{
+		disp.nRow = row;
+		disp.nCol = col;
+		disp.text = str;
+		disp.cchTextMax = 512 - 1;
+
+		if (m_lpgvwndproc(m_hwnd, GVN_GETDISPLENINFO, (WPARAM)&disp, 0) == FALSE)
+			disp.cchTextMax = 512;
+
+		m_lpgvwndproc(m_hwnd, GVN_GETDISPINFODATA, (WPARAM)&disp, 1);
+	}
+	else
+	{
+		VERIFY(pgvcol = GetSubItemStruct(col, col));
+
+		if (pgvcol->text)
+		{
+			pgvcoltext.SetAs(pgvcol->text);
+
+			strncpy(str, pgvcoltext.GetString(), pgvcoltext.GetLength());
+		}
+	}
+}

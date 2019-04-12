@@ -49,7 +49,8 @@ void SessionView::CreateGrid()
 	m_hwndgrid = CreateCustomGridEx(m_hwndframe,
 		0, 0, 0, 0,
 		m_gridwndproc,
-		GV_EX_ROWCHECKBOX | GV_EX_OWNERDATA | GV_EX_COL_TOOLTIP, (LPARAM)this);
+		//GV_EX_ROWCHECKBOX | 
+		GV_EX_OWNERDATA | GV_EX_COL_TOOLTIP | GV_EX_MULTIROW_SELECT, (LPARAM)this);
 
 	CustomGrid_SetOwnerData(m_hwndgrid, wyTrue);
 	SetGridFont();
@@ -268,7 +269,9 @@ SessionView::GetQuery(wyString& query)
 	//	m_backtick, m_mydata->m_db.GetString(), m_backtick,
 	//	m_backtick, m_mydata->m_table.GetString(), m_backtick);
 
+	//query.Sprintf("SELECT A.ID as PROCESSLIST_ID, B.THREAD_ID,  A.USER, A.HOST, A.DB, A.COMMAND, A.TIME, A.STATE, A.INFO, B.NAME, B.THREAD_OS_ID FROM information_schema.PROCESSLIST A, performance_schema.threads B WHERE A.ID = B.PROCESSLIST_ID");
 	query.Sprintf("SELECT * FROM information_schema.PROCESSLIST");
+	//query.Sprintf("SELECT ID, USER FROM information_schema.PROCESSLIST");
 	//get filter info
 	//GetFilterInfo(query);
 
@@ -840,14 +843,29 @@ SessionView::OnWMCommand(WPARAM wparam, LPARAM lparam)
 {
 	wyInt32 id = 0;
 	MySQLRowEx* row = NULL;
+	CCustGrid	*pcg = GetCustCtrlData(m_hwndgrid);
+	wyChar text[512];
+
+	PGVROW pRow = NULL;
+
 	switch (LOWORD(wparam))
 	{
 		//add a new row
 	case IDM_KILL_SESSION:
-		row = m_data->m_rowarray->GetRowExAt(m_data->m_selrow);
-		id = atoi(row->m_row[0]);
-		OnKillSession(id);
+		pRow = pcg->GetSelRowList();
+		while(pRow)
+		{
+			memset(text, 0, 512);
+			pcg->GetCellText(pRow->row, 0, text);
+			id = atoi(text);
+			OnKillSession(id);
+			pRow = pRow->pNext;
+		}
+		pcg->InitSelectedRow();
+		Execute(TA_REFRESH, wyTrue, wyTrue, LA_LIMITCLICK);
 		RefreshDataView();
+
+		
 		break;
 	case ID_RESULT_INSERT:
 	case ID_RESULT_DELETE:
@@ -868,5 +886,36 @@ void SessionView::OnKillSession(wyInt32 id)
 
 	query.Sprintf("kill %d", id);
 	ExecuteQuery(query);
-	Execute(TA_REFRESH, wyTrue, wyTrue, LA_LIMITCLICK);
+}
+
+//function to create the windows 
+void
+SessionView::Create()
+{
+	//create the outer frame, parent to all other windows
+	CreateFrame();
+
+	//create grid view 
+	CreateGrid();
+
+	//create text view
+	CreateText();
+
+	//create form view
+	CreateForm();
+
+	//create toolbar, this is a virtual function so that derived class can create additional toolbars
+	CreateToolBar();
+
+	//create the refresh bar
+	CreateRefreshBar();
+
+	//create the padding window to give some space on top
+	CreatePaddingWindow();
+
+	//the warning windows which shows data modified or any warning occured
+	CreateWarnings();
+
+	//disable all buttons
+	EnableToolButton(wyFalse, -1);
 }

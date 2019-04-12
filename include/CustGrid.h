@@ -282,6 +282,12 @@ typedef struct tagGVWATTERMARK
 */
 typedef LRESULT(CALLBACK* GVWNDPROC)(HWND, UINT, WPARAM, LPARAM);
 
+// row list
+typedef struct tagGVROW 
+{
+	LONG		row;
+	tagGVROW	*pNext;
+}GVROW, *PGVROW;
 
 class CCustGrid
 {
@@ -414,6 +420,9 @@ public:
 	wyBool      DrawCell(HDC hdcmem, wyInt32 row, wyInt32 col, PGVCOLNODE topcolstruct, PGVCOLUMN pgvcol,
 						    HBRUSH hbrbkgnd, RECT * rect, RECT * greyrect, RECT * rowrect);
 
+	wyBool
+		DrawCellMultiSelection(HDC hdcmem, wyInt32 row, wyInt32 col, PGVCOLNODE topcolstruct, PGVCOLUMN pgvcol,
+			HBRUSH hbrbkgnd, RECT * greyrect, RECT * rect, RECT * rowrect);
     /// Function takes the cell boundary in RECT parameter and draws
     /**
     @param hdc          : IN Handle to device
@@ -1002,7 +1011,9 @@ public:
 
     void SetSelAllState(wyInt32 state =  -1);
 
+	PGVROW GetSelRowList();
 
+	void GetCellText(wyInt32 row, wyInt32 col, wyChar* str);
 private:
 
     /// This function is called when paint message is received
@@ -1903,6 +1914,21 @@ private:
     void        PaintColumnHeader(HDC hdcmem, RECT *recttemp, wyInt32 *ncurcol);
 	void        PaintRowHeader(HDC hdcmem, RECT *recttemp, wyInt32 *ncurrow);
 
+	//	Add selected row for multi selection
+	void		AddSelectedRow(LONG row);
+	//	Remove selected row for multi selection
+	void		RemoveSelectedRow(LONG row);
+
+	// whether select row or not
+	wyBool		isSelectRow(wyInt32 row);
+
+
+public:
+	//	Init selected row list for multi selection
+	void		InitSelectedRow();
+
+	
+private :
 	 /// Determines the column perpage display
     /**
     @returns the number of columns that can be displyed per page
@@ -1962,6 +1988,9 @@ private:
 
     /// Current selected row
 	LONG		m_curselrow;
+
+	/// Current selected row list
+	PGVROW		m_selrowlist;
 
     /// Current selected column
     LONG        m_curselcol;
@@ -2108,6 +2137,8 @@ private:
 #define GV_EX_NO_HOR_BORDER     32
 #define GV_EX_STRETCH_LAST_COL  64
 #define GV_EX_COL_TOOLTIP		128
+// Add by woogeee 2019.04.08 for multi row selection
+#define GV_EX_MULTIROW_SELECT	256
 
 #define	GV_DEFWIDTH				25
 #define	GV_DEFHIGHT				18
